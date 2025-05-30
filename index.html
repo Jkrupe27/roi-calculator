@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROI Projection Calculator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f8f9fa, #e9ecef);
+      color: #f1f3f5;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: linear-gradient(145deg, #0a192f, #12284c);
+      background-size: 400% 400%;
+      animation: pearlShimmer 12s ease infinite;
+      padding: 40px 50px;
+      border-radius: 18px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes pearlShimmer {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    .container::before {
+      content: '';
+      background: url('shopper-approved-logo.png') no-repeat center;
+      background-size: 120px;
+      width: 120px;
+      height: 50px;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0.9;
+    }
+
+    .container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(120deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 80%);
+      transform: skewX(-25deg);
+      animation: shimmer 9s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -75%; }
+      50% { left: 125%; }
+      100% { left: -75%; }
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #f8f9fa;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #f1f3f5;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #495057;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      background: #f8f9fa;
+      color: #212529;
+    }
+
+    input:focus {
+      border-color: #ffa726;
+      outline: none;
+      box-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
+    }
+
+    button {
+      width: 100%;
+      background-color: #0d47a1;
+      color: #f8f9fa;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 17px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background-color: #ff6f00;
+      box-shadow: 0 0 15px #ff6f00aa;
+    }
+
+    table {
+      margin-top: 40px;
+      width: 100%;
+      color: #f8f9fa;
+      background-color: #1c2331;
+      border-radius: 12px;
+      overflow: hidden;
+      transform: scale(1.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 25px rgba(255, 165, 0, 0.3);
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    th, td {
+      padding: 1.15rem;
+      border-bottom: 1px solid #33415c;
+      text-align: left;
+      font-size: 1.1rem;
+    }
+
+    th {
+      background-color: #26374d;
+      font-size: 1.25rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ROI Projection Calculator</h1>
+    <label>Monthly Page Views:
+      <input type="number" id="pageViews" value="10505">
+    </label>
+    <label>Monthly Orders:
+      <input type="number" id="orders" value="57">
+    </label>
+    <label>Average Order Value ($):
+      <input type="number" id="aov" value="325">
+    </label>
+    <label>Traffic Uplift (%):
+      <input type="number" id="trafficBoost" value="15">
+    </label>
+    <label>Conversion Uplift (%):
+      <input type="number" id="conversionBoost" value="10">
+    </label>
+    <button onclick="calculateROI()">Calculate</button>
+
+    <table id="resultTable" style="display:none">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Before SA</th>
+          <th>After SA</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" style="text-align: center; font-weight: bold; background: #2e3c55; color: #ffa726; padding-top: 20px;">
+            Projected with +<span id="trafficPercent"></span>% Traffic and +<span id="conversionPercent"></span>% Conversion Uplift
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <script>
+    function calculateROI() {
+      const pageViews = parseFloat(document.getElementById('pageViews').value);
+      const orders = parseFloat(document.getElementById('orders').value);
+      const aov = parseFloat(document.getElementById('aov').value);
+      const trafficBoost = parseFloat(document.getElementById('trafficBoost').value);
+      const conversionBoost = parseFloat(document.getElementById('conversionBoost').value);
+
+      const originalRevenue = orders * aov;
+      const originalCR = orders / pageViews;
+
+      const newPageViews = pageViews * (1 + trafficBoost / 100);
+      const newCR = originalCR * (1 + conversionBoost / 100);
+      const newOrders = newPageViews * newCR;
+      const newRevenue = newOrders * aov;
+
+      document.getElementById('trafficPercent').textContent = trafficBoost;
+      document.getElementById('conversionPercent').textContent = conversionBoost;
+
+      const resultBody = document.getElementById('resultBody');
+      resultBody.innerHTML = `
+        <tr>
+          <td>Monthly Page Views</td>
+          <td>${pageViews.toLocaleString()}</td>
+          <td>${newPageViews.toFixed(0)}</td>
+          <td>+${(newPageViews - pageViews).toFixed(0)}</td>
+        </tr>
+        <tr>
+          <td>Conversion Rate</td>
+          <td>${(originalCR * 100).toFixed(2)}%</td>
+          <td>${(newCR * 100).toFixed(2)}%</td>
+          <td>+${((newCR - originalCR) * 100).toFixed(2)}%</td>
+        </tr>
+        <tr>
+          <td>Monthly Orders</td>
+          <td>${orders}</td>
+          <td>${newOrders.toFixed(0)}</td>
+          <td>+${(newOrders - orders).toFixed(0)}</td>
+        </tr>
+        <tr>
+          <td>Monthly Revenue</td>
+          <td>$${originalRevenue.toFixed(2)}</td>
+          <td>$${newRevenue.toFixed(2)}</td>
+          <td>+$${(newRevenue - originalRevenue).toFixed(2)}</td>
+        </tr>
+      `;
+      document.getElementById('resultTable').style.display = 'table';
+    }
+  </script>
+</body>
+</html>
